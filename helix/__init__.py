@@ -1,6 +1,7 @@
 import random
 import datetime
 from bisect import bisect_left
+from math import exp
 
 class Chromosome:
     __slots__ = ['genes', 'fitness', 'age', 'strategy']
@@ -12,10 +13,15 @@ class Chromosome:
 
 
 class Evolution:
-    def __init__(self, gene_set, fitness_func, optimal_fitness):
+    def __init__(self, gene_set, fitness_func, optimal_fitness, mutation='pick',
+                 *args, **kwargs):
         self.gene_set = gene_set
         self.fitness_func = fitness_func
         self.optimal_fitness = optimal_fitness
+        # Select the mutation strategy.
+        self.mutate = {'pick': self.pick_mutate, 'swap': self.swap_mutate}[mutation]
+        # Currently *gene_indices* are only used for swap mutation
+        self.gene_indices = list(range(len(self.gene_set)))
 
     def generate_parent(self, num_genes, age=None, *args, **kwargs):
         genes = []
@@ -25,22 +31,39 @@ class Evolution:
         return Chromosome(genes, self.fitness_func(genes, *args, **kwargs),
                           age, strategy='create')
 
-    def mutate(self, parent, *args, **kwargs):
+    def pick_mutate(self, parent, *args, **kwargs):
         """
         :param parent:
         :type parent: Chromosome
         :rtype: Chromosome
         """
-        index = random.randrange(0, len(parent.genes))
         child_genes = list(parent.genes)
+        index = random.randrange(0, len(parent.genes))
         new_gene, alternate = random.sample(self.gene_set, 2)
         child_genes[index] = alternate if new_gene == child_genes[index] else new_gene
-        return Chromosome(child_genes, self.fitness_func(child_genes, *args, **kwargs))
+        return Chromosome(child_genes, self.fitness_func(child_genes, *args, **kwargs), age=parent.age)
 
-    def crossover(self, child_fitness, fitness_history):
+    def swap_mutate(self, parent, *args, **kwargs):
+        """
+        :param parent:
+        :type parent: Chromosome
+        :rtype: Chromosome
+        """
+        child_genes = list(parent.genes)
+        index_a, index_b = random.sample(self.gene_indices, 2)
+        child_genes[index_a],  child_genes[index_b] = child_genes[index_b], child_genes[index_a]
+        return Chromosome(child_genes, self.fitness_func(child_genes, *args, **kwargs), age=parent.age)
+
+    def child_becomes_parent(self, child_fitness, fitness_history):
+        # Determine how far away is the child_fitness from best_fitness.
+        # Find the  position of the child's fitness.
         index = bisect_left(fitness_history, child_fitness, 0, len(fitness_history))
+        # Find the proxmity to the best fitness (last on the *fitness_history*)
         difference = len(fitness_history) - index
-        similar_proportion = difference / len(difference)
+        # Convert it to a proportion.
+        similar_proportion = difference / len(fitness_history)
+        # Pick a random number, check if random number is smaller than
+        # `exp(-similar_proportion)`, then child becomes parent.
         return random.random() < exp(-similar_proportion)
 
     def evolve(self, parent, max_age=None, *args, **kwargs):
@@ -48,37 +71,39 @@ class Evolution:
         best_parent = parent
         while True:
             child = self.mutate(parent, *args, **kwargs)
-            # parent > child
+
+            # parent's fitness > child's fitness
             if parent.fitness > child.fitness:
-                continue
-                """
                 if max_age is None:
                     continue
-                # Continue from parent.
+                # Let the parent die out if max_age is reached.
                 parent.age += 1
                 if max_age > parent.age:
                     continue
-                if crossover(child.fitness, fitness_history):
+                # Simulated annealing.
+                # If child is to become the new parent.
+                if self.child_becomes_parent(child.fitness, fitness_history):
                     parent = child
-                    continue
-                best_parent.age = 0
-                parent = best_parent
+                else: # Otherwise reset parent's age.
+                    best_parent.age = 0
+                    parent = best_parent
                 continue
-                """
-            # child >= parent
-            if child.fitness <= parent.fitness:
-                ##child.age = parent.age + 1
+
+            # parent's fitness == child's fitness
+            if child.fitness == parent.fitness:
+                child.age = parent.age + 1
                 parent = child
                 continue
-            yield child
+
+            # parent's fitness < child's fitness:
             child.age = 0
             parent = child
 
-            # child > parent
+            # best_parent's fitness < child's fitness:
             if child.fitness > best_parent.fitness:
                 best_parent = child
                 yield best_parent
-
+                fitness_history.append(child.fitness)
 
     def find_fittest(self, num_genes, random_seed=0, max_age=None, *args, **kwargs):
         random.seed(random_seed)
