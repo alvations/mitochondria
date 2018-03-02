@@ -10,6 +10,19 @@ from math import exp
 class Chromosome:
     __slots__ = ['genes', 'fitness', 'age', 'strategy']
     def __init__(self, genes, fitness, age=None, strategy=None):
+        """
+        The `Chromosome` class is a container object to store the variables
+        used in genetic evolution process. Think of it like an organism.
+
+        :param genes: The genome of this organism
+        :type genes: list
+        :param fitness: The fitness object from helix.fitness
+        :type fitness: Fitness
+        :param age: The age from which the organism has descended.
+        :type age: int
+        :param strategy: Specify how is the organism created.
+        :type strategy: str
+        """
         self.genes = genes
         self.fitness = fitness
         self.strategy = strategy
@@ -19,6 +32,19 @@ class Chromosome:
 class Evolution:
     def __init__(self, gene_set, fitness_func, optimal_fitness, mutation,
                  *args, **kwargs):
+        """
+        The `Evolution` class is the main object that controls the evolution
+        process.
+
+        :param gene_set: The no. of unique genes of the organism's genome.
+        :type gene_set: list
+        :param fitness_func: The fitness function to optimize evolution.
+        :type fitness_func: module
+        :param optimal_fitness: The optimal fitness that evolution should head towards.
+        :type optimal_fitness: Fitness
+        :param mutation: The mutation object from helix.mutation
+        :type mutation: Mutation
+        """
         self.gene_set = gene_set
         self.fitness_func = fitness_func
         self.optimal_fitness = optimal_fitness
@@ -28,6 +54,14 @@ class Evolution:
 
 
     def generate_parent(self, num_genes, age=None, *args, **kwargs):
+        """
+        The function to emulate the genesis of the ancestor's gene.
+
+        :param num_genes: The length of the genes for the Chromosome object.
+        :param num_genes: int
+        :param age: The age from which the organism has descended.
+        :type age: int
+        """
         genes = []
         while len(genes) < num_genes:
             sample_size = min(num_genes-len(genes), len(self.gene_set))
@@ -36,6 +70,14 @@ class Evolution:
                           age, strategy='create')
 
     def child_becomes_parent(self, child_fitness, fitness_history):
+        """
+        The stimulated annealing condition function.
+
+        :param child_fitness: The child's fitness object.
+        :type child_fitness: Fitness
+        :param fitness_history: The history of fitness objects through the evolution.
+        :type fitness_history: list(Fitness)
+        """
         # Determine how far away is the child_fitness from best_fitness.
         # Find the  position of the child's fitness.
         index = bisect_left(fitness_history, child_fitness, 0, len(fitness_history))
