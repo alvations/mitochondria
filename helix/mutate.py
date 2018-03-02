@@ -4,13 +4,26 @@ from helix import Chromosome
 
 class Mutation:
     def __init__(self, mutation_type, *args, **kwargs):
+        """
+        The `Mutation` object controls the mutation functions in the genetic process.
+
+        :param mutation_type: string option to toggle mutation function.
+        :type mutation_type: str
+        """
         # Select the mutation strategy.
         self.mutate = {'pick': self.pick, 'swap': self.swap}[mutation_type]
 
     def pick(self, parent, gene_set, fitness_func, *args, **kwargs):
         """
-        :param parent:
+        The `pick` mutation randomly selects a single gene from the genome and
+        replace one of the parent's to create a child.
+
+        :param parent: The parent chromosome.
         :type parent: Chromosome
+        :param gene_set: The fixed set of gene.
+        :type gene_set: list
+        :param fitness_func: The fitness function used to optimize mutation.
+        :type fitness_func: module
         :rtype: Chromosome
         """
         child_genes = list(parent.genes)
@@ -21,8 +34,15 @@ class Mutation:
 
     def swap(self, parent, gene_set, fitness_func, *args, **kwargs):
         """
-        :param parent:
+        The `swap` mutation randomly selects a two positions of the genes and
+        swap them to create a child.
+
+        :param parent: The parent chromosome.
         :type parent: Chromosome
+        :param gene_set: The fixed set of gene.
+        :type gene_set: list
+        :param fitness_func: The fitness function used to optimize mutation.
+        :type fitness_func: module
         :rtype: Chromosome
         """
         gene_indices = list(range(len(gene_set)))

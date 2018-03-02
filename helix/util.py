@@ -12,6 +12,13 @@ class Window:
 
 
 def magic_square_params(diagonal_size):
+    """
+    This is a helper function to create the gene_set, optimal_fitness and
+    the expected sum of all the rows, columns and diagonals.
+    
+    :param diagonal_size: The diagonal length of the magic square.
+    :type diagonal_size: int
+    """
     numbers = list(range(1, diagonal_size**2+1))
     optimal_fitness = 2 + 2 * diagonal_size
     expected_sum = diagonal_size * (diagonal_size**2 + 1) / 2
