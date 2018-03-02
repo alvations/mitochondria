@@ -1,7 +1,11 @@
+#!/usr/bin/env python
+#-*- coding: utf-8 -*-
+
 import random
 import datetime
 from bisect import bisect_left
 from math import exp
+
 
 class Chromosome:
     __slots__ = ['genes', 'fitness', 'age', 'strategy']
@@ -10,6 +14,7 @@ class Chromosome:
         self.fitness = fitness
         self.strategy = strategy
         self.age = age
+
 
 class Evolution:
     def __init__(self, gene_set, fitness_func, optimal_fitness, mutation,
@@ -48,7 +53,6 @@ class Evolution:
         while True:
             child = self.mutation.mutate(parent, self.gene_set, self.fitness_func,
                                          *args, **kwargs)
-
             # parent's fitness > child's fitness
             if parent.fitness > child.fitness:
                 if max_age is None:

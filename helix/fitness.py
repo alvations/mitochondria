@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#-*- coding: utf-8 -*-
 
 class Fitness:
     def __init__(self, criterion, *args, **kwargs):

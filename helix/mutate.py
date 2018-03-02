@@ -3,9 +3,10 @@ import random
 from helix import Chromosome
 
 class Mutation:
-    def __init__(self, mutation_type):
+    def __init__(self, mutation_type, *args, **kwargs):
         # Select the mutation strategy.
-        self.mutate = {'pick': self.pick, 'swap': self.swap}[mutation_type]
+        self.mutate = {'pick': self.pick, 'swap': self.swap,
+                       'window': self.window}[mutation_type]
 
     def pick(self, parent, gene_set, fitness_func, *args, **kwargs):
         """

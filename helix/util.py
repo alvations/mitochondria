@@ -1,3 +1,14 @@
+#!/usr/bin/env python
+#-*- coding: utf-8 -*-
+
+class Window:
+    def __init__(self, minimum, maximum, size):
+        self.minimum = minimum
+        self.maximum = maximum
+        self.size = size
+
+    def slide(self):
+        self.size = self.size - 1 if self.size > self.minimum else self.maximum
 
 
 def magic_square_params(diagonal_size):
