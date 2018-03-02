@@ -90,6 +90,34 @@ class Evolution:
         return random.random() < exp(-similar_proportion)
 
     def evolve(self, parent, max_age=None, *args, **kwargs):
+        """
+        The evolve functions that:
+         1. Mutate the child from the parent
+
+         2. Check if the parent's fitness is > child's fitness
+           2a.  Continue the evolution if no max_age is required
+           2b.1.  If yes, let the parent die out if max_age is reached
+           2b.2.  Check the condition for stimulated annealing
+           2b.2.1.  If condition, parent genes passed on to child fully
+           2b.2.2   Else, reset the parent's age and make it the best_parent
+
+         3. Check if the childn's fitness == parent's fitness.
+           3a.  If yes, update the child's age to be parent's age + 1
+               and the child becomes the new parent, process on the branch.
+
+         4. Set the child's age to 0 and the child becomes the new parent to
+            start a new branch.
+
+         5. Check if the child's fitness is better than the best_parent's fitness
+           5a.  if yes, the child becomes the best_parent and append its fitness
+                to the fitness_history.
+
+        :param parent: The parent chromosome.
+        :type parent: Chromosome
+        :param max_age: The hyperparameter that affects the rate of stimulated annealing.
+        :type max_age: int
+        :rtype: Chromosome
+        """
         fitness_history = [parent.fitness]
         best_parent = parent
         while True:
@@ -129,6 +157,23 @@ class Evolution:
                 fitness_history.append(child.fitness)
 
     def find_fittest(self, num_genes, random_seed=0, max_age=None, *args, **kwargs):
+        """
+        The main function to start the evolution process.
+
+        First the generation 0 parent will be generated and then the evolution
+        starts with self.evolve().
+
+        This function will print the best child in each evolution process and
+        return the final child that matches the target based on the fitness.
+
+        :param num_genes: The length of the genes for the Chromosome object.
+        :param num_genes: int
+        :param random_seed: The random seed.
+        :type random_seed: int
+        :param max_age: The hyperparameter that affects the rate of stimulated annealing.
+        :type max_age: int
+        :rtype: Chromosome
+        """
         random.seed(random_seed)
         # Genesis: Create generation 0 parent.
         gen0 = self.generate_parent(num_genes, age=0, *args, **kwargs)
