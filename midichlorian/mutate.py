@@ -1,6 +1,6 @@
 import random
 
-from helix import Chromosome
+from midichlorian import Chromosome
 
 class Mutation:
     def __init__(self, mutation_type, *args, **kwargs):
