@@ -30,7 +30,7 @@ class Chromosome:
 
 
 class Evolution:
-    def __init__(self, gene_set, fitness_func, optimal_fitness, mutation,
+    def __init__(self, gene_set, fitness_func, mutation,
                  *args, **kwargs):
         """
         The `Evolution` class is the main object that controls the evolution
@@ -40,14 +40,11 @@ class Evolution:
         :type gene_set: list
         :param fitness_func: The fitness function to optimize evolution.
         :type fitness_func: module
-        :param optimal_fitness: The optimal fitness that evolution should head towards.
-        :type optimal_fitness: Fitness
         :param mutation: The mutation object from helix.mutation
         :type mutation: Mutation
         """
         self.gene_set = gene_set
         self.fitness_func = fitness_func
-        self.optimal_fitness = optimal_fitness
         # Select the mutation strategy.
         self.mutation = mutation
         # Currently *gene_indices* are only used for swap mutation
@@ -156,7 +153,7 @@ class Evolution:
                 yield best_parent
                 fitness_history.append(child.fitness)
 
-    def generate(self, num_genes, random_seed=0, max_age=None, *args, **kwargs):
+    def generate(self, num_genes, optimal_fitness, random_seed=0, max_age=None, *args, **kwargs):
         """
         The main function to start the evolution process.
 
@@ -168,6 +165,8 @@ class Evolution:
 
         :param num_genes: The length of the genes for the Chromosome object.
         :param num_genes: int
+        :param optimal_fitness: The optimal fitness that evolution should head towards.
+        :type optimal_fitness: Fitness
         :param random_seed: The random seed.
         :type random_seed: int
         :param max_age: The hyperparameter that affects the rate of stimulated annealing.
@@ -181,7 +180,7 @@ class Evolution:
         generations_best.append(gen0)
 
         # If somehow, we met the criteria after gen0, banzai!
-        if gen0.fitness > self.optimal_fitness:
+        if gen0.fitness > optimal_fitness:
             return generations_best
 
         start_time = datetime.datetime.now()
@@ -191,6 +190,6 @@ class Evolution:
             print("{}\t{}\t{}".format(child.genes, child.fitness, time_taken))
             generations_best.append(child)
             # Return child if fitness reached optimal.
-            if self.optimal_fitness <= child.fitness:
+            if optimal_fitness <= child.fitness:
                 break
         return generations_best
