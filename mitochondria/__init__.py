@@ -156,7 +156,7 @@ class Evolution:
                 yield best_parent
                 fitness_history.append(child.fitness)
 
-    def find_fittest(self, num_genes, random_seed=0, max_age=None, *args, **kwargs):
+    def generate(self, num_genes, random_seed=0, max_age=None, *args, **kwargs):
         """
         The main function to start the evolution process.
 
@@ -175,17 +175,22 @@ class Evolution:
         :rtype: Chromosome
         """
         random.seed(random_seed)
+        generations_best = []
         # Genesis: Create generation 0 parent.
         gen0 = self.generate_parent(num_genes, age=0, *args, **kwargs)
+        generations_best.append(gen0)
+
         # If somehow, we met the criteria after gen0, banzai!
         if gen0.fitness > self.optimal_fitness:
-            return best_parent
+            return generations_best
 
         start_time = datetime.datetime.now()
         for child in self.evolve(gen0, max_age, *args, **kwargs):
             # Log time taken to reach better fitness.
             time_taken = datetime.datetime.now() - start_time
             print("{}\t{}\t{}".format(child.genes, child.fitness, time_taken))
+            generations_best.append(child)
             # Return child if fitness reached optimal.
             if self.optimal_fitness <= child.fitness:
-                return child
+                break
+        return generations_best
