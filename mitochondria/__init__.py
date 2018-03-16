@@ -2,6 +2,7 @@
 #-*- coding: utf-8 -*-
 
 import random
+import sys
 import datetime
 from bisect import bisect_left
 from math import exp
@@ -193,7 +194,7 @@ class Evolution:
             # Log time taken to reach better fitness.
             time_taken = datetime.datetime.now() - start_time
             best_child = child[-1] if keep_history else child
-            print("{}\t{}\t{}".format(best_child.genes, best_child.fitness, time_taken))
+            print("{}\t{}\t{}".format(best_child.genes, best_child.fitness, time_taken), file=sys.stderr)
             generations_best.append(child)
             # Return child if fitness reached optimal.
             if optimal_fitness <= best_child.fitness:
