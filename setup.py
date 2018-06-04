@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
   name = 'mitochondria',
   packages = ['mitochondria'],
-  version = '0.0.7',
+  version = '0.0.8',
   description = '',
   author = 'Liling Tan',
   license = 'MIT',
