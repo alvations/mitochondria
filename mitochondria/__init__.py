@@ -18,7 +18,7 @@ class Chromosome:
 
         :param genes: The genome of this organism
         :type genes: list
-        :param fitness: The fitness object from helix.fitness
+        :param fitness: The fitness object from mitochondria.fitness
         :type fitness: Fitness
         :param age: The age from which the organism has descended.
         :type age: int
@@ -192,7 +192,8 @@ class Evolution:
             # When evolving, fire genesis: Create generation 0 parent.
             gen0 = self.generate_parent(num_genes, age=0, *args, **kwargs)
         else: # When devolving, the *epitome* variable is used.
-            gen0 = Chromosome(epitome, self.fitness_func(self.gene_set, age=0, *args, **kwargs),
+            gen0_fitness_func = self.fitness_func(self.gene_set, age=0, *args, **kwargs)
+            gen0 = Chromosome(epitome, MinimizeFitness(gen0_fitness_func),
                               age=0, strategy='create')
         generations_best.append(gen0)
 
