@@ -4,6 +4,7 @@
 import random
 import sys
 import datetime
+from operator import gt
 from bisect import bisect_left
 from math import exp
 
@@ -87,12 +88,12 @@ class Evolution:
         # `exp(-similar_proportion)`, then child becomes parent.
         return random.random() < exp(-similar_proportion)
 
-    def evolve(self, parent, max_age=None, keep_history=False, *args, **kwargs):
+    def evolve(self, parent, max_age=None, keep_history=False, comparator=gt, *args, **kwargs):
         """
         The evolve functions that:
          1. Mutate the child from the parent
 
-         2. Check if the parent's fitness is > child's fitness
+         2. Check if the parent's fitness is > or < child's fitness, check *comparator* argument.
            2a.  Continue the evolution if no max_age is required
            2b.1.  If yes, let the parent die out if max_age is reached
            2b.2.  Check the condition for stimulated annealing
@@ -125,7 +126,7 @@ class Evolution:
             # Keep logging each generation.
             this_generation.append(child)
             # parent's fitness > child's fitness
-            if parent.fitness > child.fitness:
+            if comparator(parent.fitness, child.fitness):
                 if max_age is None:
                     continue
                 # Let the parent die out if max_age is reached.
