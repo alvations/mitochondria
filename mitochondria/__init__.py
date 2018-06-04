@@ -4,6 +4,7 @@
 import random
 import sys
 import datetime
+from operator import le, ge
 from bisect import bisect_left
 from math import exp
 
@@ -191,7 +192,6 @@ class Evolution:
             # When evolving, fire genesis: Create generation 0 parent.
             gen0 = self.generate_parent(num_genes, age=0, *args, **kwargs)
         else: # When devolving, the *epitome* variable is used.
-            assert epitome # Make sure that the epitome genetic sequence is given.
             gen0 = Chromosome(epitome, self.fitness_func(self.gene_set, age=0, *args, **kwargs),
                               age=0, strategy='create')
         generations_best.append(gen0)
@@ -208,6 +208,7 @@ class Evolution:
             print("{}\t{}\t{}".format(best_child.genes, best_child.fitness, time_taken), file=sys.stderr)
             generations_best.append(child)
             # Return child if fitness reached optimal.
-            if optimal_fitness*degree <= best_child.fitness:
+            comparator = ge if epitome else le
+            if comparator(optimal_fitness*degree, best_child.fitness):
                 break
         return generations_best
