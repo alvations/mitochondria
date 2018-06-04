@@ -4,7 +4,7 @@
 import random
 import sys
 import datetime
-from operator import gt
+from operator import gt, lt, ge, le
 from bisect import bisect_left
 from math import exp
 
@@ -32,7 +32,7 @@ class Chromosome:
 
 
 class Evolution:
-    def __init__(self, gene_set, fitness_func, mutation,
+    def __init__(self, gene_set, fitness_func, mutation, forward=True,
                  *args, **kwargs):
         """
         The `Evolution` class is the main object that controls the evolution
@@ -51,6 +51,12 @@ class Evolution:
         self.mutation = mutation
         # Currently *gene_indices* are only used for swap mutation
 
+        # If the comparator is not set, evolve from random to wordself.
+        # Else, devolve from word to random.
+        # Initialize the direction of evolution,
+        # When forward=True: Evolve from random to optimal_fitness
+        # Else forward=False: Devolve from final state to optimal_fitness
+        self.direction = forward
 
     def generate_parent(self, num_genes, age=None, *args, **kwargs):
         """
@@ -88,7 +94,7 @@ class Evolution:
         # `exp(-similar_proportion)`, then child becomes parent.
         return random.random() < exp(-similar_proportion)
 
-    def evolve(self, parent, max_age=None, keep_history=False, comparator=gt, *args, **kwargs):
+    def evolve(self, parent, max_age=None, keep_history=False, *args, **kwargs):
         """
         The evolve functions that:
          1. Mutate the child from the parent
@@ -120,12 +126,15 @@ class Evolution:
         fitness_history = [parent.fitness]
         best_parent = parent
         this_generation = []
+        comparator = gt if self.direction else lt
         while True:
             child = self.mutation.mutate(parent, self.gene_set, self.fitness_func,
                                          *args, **kwargs)
             # Keep logging each generation.
             this_generation.append(child)
-            # parent's fitness > child's fitness
+            # To break the generations, we check that:
+            # Evolving: parent's fitness > child's fitness
+            # Devolving: parent's fitness < child's fitness
             if comparator(parent.fitness, child.fitness):
                 if max_age is None:
                     continue
@@ -152,15 +161,15 @@ class Evolution:
             child.age = 0
             parent = child
 
-            # best_parent's fitness < child's fitness:
-            if child.fitness > best_parent.fitness:
+            # if best_parent's fitness < child's fitness:
+            if comparator(child.fitness, best_parent.fitness):
                 best_parent = child
                 yield best_parent if keep_history == False else this_generation
                 fitness_history.append(child.fitness)
                 this_generation = []
 
     def generate(self, num_genes, optimal_fitness, random_seed=0, max_age=None,
-                 keep_history=False, *args, **kwargs):
+                 keep_history=False, degree=1.0, *args, **kwargs):
         """
         The main function to start the evolution process.
 
@@ -187,9 +196,11 @@ class Evolution:
         generations_best.append(gen0)
 
         # If somehow, we met the criteria after gen0, banzai!
-        if gen0.fitness > optimal_fitness:
+        comparator = gt if self.direction else lt
+        if comparator(gen0.fitness, optimal_fitness):
             return generations_best if keep_history == False else [[generations_best]]
 
+        comparator_equals = le if self.direction else ge
         start_time = datetime.datetime.now()
         for child in self.evolve(gen0, max_age, keep_history=keep_history, *args, **kwargs):
             # Log time taken to reach better fitness.
@@ -198,6 +209,6 @@ class Evolution:
             print("{}\t{}\t{}".format(best_child.genes, best_child.fitness, time_taken), file=sys.stderr)
             generations_best.append(child)
             # Return child if fitness reached optimal.
-            if optimal_fitness <= best_child.fitness:
+            if comparator_equals(optimal_fitness, best_child.fitness):
                 break
         return generations_best
