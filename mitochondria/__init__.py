@@ -4,7 +4,6 @@
 import random
 import sys
 import datetime
-from operator import gt, lt, ge, le
 from bisect import bisect_left
 from math import exp
 
@@ -32,8 +31,7 @@ class Chromosome:
 
 
 class Evolution:
-    def __init__(self, gene_set, fitness_func, mutation, forward=True,
-                 *args, **kwargs):
+    def __init__(self, gene_set, fitness_func, mutation, *args, **kwargs):
         """
         The `Evolution` class is the main object that controls the evolution
         process.
@@ -51,12 +49,6 @@ class Evolution:
         self.mutation = mutation
         # Currently *gene_indices* are only used for swap mutation
 
-        # If the comparator is not set, evolve from random to wordself.
-        # Else, devolve from word to random.
-        # Initialize the direction of evolution,
-        # When forward=True: Evolve from random to optimal_fitness
-        # Else forward=False: Devolve from final state to optimal_fitness
-        self.direction = forward
 
     def generate_parent(self, num_genes, age=None, *args, **kwargs):
         """
@@ -99,7 +91,7 @@ class Evolution:
         The evolve functions that:
          1. Mutate the child from the parent
 
-         2. Check if the parent's fitness is > or < child's fitness, check *comparator* argument.
+         2. Check if the parent's fitness is > child's fitness.
            2a.  Continue the evolution if no max_age is required
            2b.1.  If yes, let the parent die out if max_age is reached
            2b.2.  Check the condition for stimulated annealing
@@ -126,16 +118,15 @@ class Evolution:
         fitness_history = [parent.fitness]
         best_parent = parent
         this_generation = []
-        comparator = gt if self.direction else lt
+
         while True:
             child = self.mutation.mutate(parent, self.gene_set, self.fitness_func,
                                          *args, **kwargs)
             # Keep logging each generation.
             this_generation.append(child)
             # To break the generations, we check that:
-            # Evolving: parent's fitness > child's fitness
-            # Devolving: parent's fitness < child's fitness
-            if comparator(parent.fitness, child.fitness):
+            # parent's fitness > child's fitness
+            if parent.fitness >  child.fitness:
                 if max_age is None:
                     continue
                 # Let the parent die out if max_age is reached.
@@ -162,7 +153,7 @@ class Evolution:
             parent = child
 
             # if best_parent's fitness < child's fitness:
-            if comparator(child.fitness, best_parent.fitness):
+            if child.fitness > best_parent.fitness:
                 best_parent = child
                 yield best_parent if keep_history == False else this_generation
                 fitness_history.append(child.fitness)
@@ -187,26 +178,28 @@ class Evolution:
         :type random_seed: int
         :param max_age: The hyperparameter that affects the rate of stimulated annealing.
         :type max_age: int
+        :param degree: The hyperparameter how far evolution shoud go, 1.0 goes to perfection.
+        :type degree: float
+        :param epitome: The argument to kickstart devolution instead of evolution.
+        :type epitome: list
         :rtype: Chromosome
         """
         random.seed(random_seed)
         generations_best = []
 
-        if self.forward:
+        if not epitome:
             # When evolving, fire genesis: Create generation 0 parent.
             gen0 = self.generate_parent(num_genes, age=0, *args, **kwargs)
-        else:
+        else: # When devolving, the *epitome* variable is used.
             assert epitome # Make sure that the epitome genetic sequence is given.
-            gen0 = Chromosome(epitome, self.fitness_func(genes, age=0, *args, **kwargs),
-                              age, strategy='create')
+            gen0 = Chromosome(epitome, self.fitness_func(self.gene_set, age=0, *args, **kwargs),
+                              age=0, strategy='create')
         generations_best.append(gen0)
 
         # If somehow, we met the criteria after gen0, banzai!
-        comparator = gt if self.direction else lt
-        if comparator(gen0.fitness, optimal_fitness):
+        if gen0.fitness > optimal_fitness:
             return generations_best if keep_history == False else [[generations_best]]
 
-        comparator_equals = le if self.direction else ge
         start_time = datetime.datetime.now()
         for child in self.evolve(gen0, max_age, keep_history=keep_history, *args, **kwargs):
             # Log time taken to reach better fitness.
@@ -215,6 +208,6 @@ class Evolution:
             print("{}\t{}\t{}".format(best_child.genes, best_child.fitness, time_taken), file=sys.stderr)
             generations_best.append(child)
             # Return child if fitness reached optimal.
-            if comparator_equals(optimal_fitness*degree, best_child.fitness):
+            if optimal_fitness*degree <= best_child.fitness:
                 break
         return generations_best
