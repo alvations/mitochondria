@@ -169,7 +169,7 @@ class Evolution:
                 this_generation = []
 
     def generate(self, num_genes, optimal_fitness, random_seed=0, max_age=None,
-                 keep_history=False, degree=1.0, *args, **kwargs):
+                 keep_history=False, degree=1.0, epitome=None, *args, **kwargs):
         """
         The main function to start the evolution process.
 
@@ -191,8 +191,14 @@ class Evolution:
         """
         random.seed(random_seed)
         generations_best = []
-        # Genesis: Create generation 0 parent.
-        gen0 = self.generate_parent(num_genes, age=0, *args, **kwargs)
+
+        if self.forward:
+            # When evolving, fire genesis: Create generation 0 parent.
+            gen0 = self.generate_parent(num_genes, age=0, *args, **kwargs)
+        else:
+            assert epitome # Make sure that the epitome genetic sequence is given.
+            gen0 = Chromosome(epitome, self.fitness_func(genes, age=0, *args, **kwargs),
+                              age, strategy='create')
         generations_best.append(gen0)
 
         # If somehow, we met the criteria after gen0, banzai!
@@ -209,6 +215,6 @@ class Evolution:
             print("{}\t{}\t{}".format(best_child.genes, best_child.fitness, time_taken), file=sys.stderr)
             generations_best.append(child)
             # Return child if fitness reached optimal.
-            if comparator_equals(optimal_fitness, best_child.fitness):
+            if comparator_equals(optimal_fitness*degree, best_child.fitness):
                 break
         return generations_best
