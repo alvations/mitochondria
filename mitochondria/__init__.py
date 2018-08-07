@@ -197,7 +197,7 @@ class Evolution:
         generations_best.append(gen0)
 
         # When evolving, if somehow, we met the criteria after gen0, banzai!
-        if optimal_fitness < gen0.fitness and not epitome:
+        if gen0.fitness > optimal_fitness and not epitome:
             return generations_best if keep_history == False else [[generations_best]]
 
         start_time = datetime.datetime.now()
