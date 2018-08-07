@@ -192,12 +192,12 @@ class Evolution:
             # When evolving, fire genesis: Create generation 0 parent.
             gen0 = self.generate_parent(num_genes, age=0, *args, **kwargs)
         else: # When devolving, the *epitome* variable is used.
-            gen0 = Chromosome(epitome, self.fitness_func(self.gene_set, age=0, *args, **kwargs),
+            gen0 = Chromosome(epitome, self.fitness_func(epitome, age=0, *args, **kwargs),
                               age=0, strategy='create')
         generations_best.append(gen0)
 
-        # If somehow, we met the criteria after gen0, banzai!
-        if gen0.fitness > optimal_fitness:
+        # When evolving, if somehow, we met the criteria after gen0, banzai!
+        if optimal_fitness < gen0.fitness and not epitome:
             return generations_best if keep_history == False else [[generations_best]]
 
         start_time = datetime.datetime.now()
@@ -208,7 +208,6 @@ class Evolution:
             print("{}\t{}\t{}".format(best_child.genes, best_child.fitness, time_taken), file=sys.stderr)
             generations_best.append(child)
             # Return child if fitness reached optimal.
-            comparator = ge if epitome else le
-            if comparator(optimal_fitness*degree, best_child.fitness):
+            if optimal_fitness <= best_child.fitness:
                 break
         return generations_best
